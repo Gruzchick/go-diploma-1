@@ -16,9 +16,9 @@ var (
 )
 
 type OsEnvs struct {
-	runAddress           *string `env:"RUN_ADDRESS"`
-	databaseURI          *string `env:"DATABASE_URI"`
-	accrualSystemAddress *string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	RunAddress           *string `env:"RUN_ADDRESS"`
+	DatabaseURI          *string `env:"DATABASE_URI"`
+	AccrualSystemAddress *string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 }
 
 func Configure() error {
@@ -31,20 +31,20 @@ func Configure() error {
 		return err
 	}
 
-	if osEnvs.runAddress != nil {
-		RunAddress = *osEnvs.runAddress
+	if osEnvs.RunAddress != nil {
+		RunAddress = *osEnvs.RunAddress
 	} else {
 		RunAddress = *runAddressFlag
 	}
 
-	if osEnvs.databaseURI != nil {
-		DatabaseURI = *osEnvs.databaseURI
+	if osEnvs.DatabaseURI != nil {
+		DatabaseURI = *osEnvs.DatabaseURI
 	} else {
 		DatabaseURI = *databaseURIFlag
 	}
 
-	if osEnvs.accrualSystemAddress != nil {
-		AccrualSystemAddress = *osEnvs.accrualSystemAddress
+	if osEnvs.AccrualSystemAddress != nil {
+		AccrualSystemAddress = *osEnvs.AccrualSystemAddress
 	} else {
 		AccrualSystemAddress = *accrualSystemAddressFlag
 	}

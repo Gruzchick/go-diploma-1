@@ -5,17 +5,17 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 func Init(databaseURI string) error {
 	var err error // TODO ASK: Как сделать чтобы не объявлять переменную
 
-	db, err = sql.Open("pgx", databaseURI)
+	DB, err = sql.Open("pgx", databaseURI)
 	if err != nil {
 		return err
 	}
 
-	defer db.Close() // TODO ASK: Узнать когда это закрывать
+	//defer DB.Close() // TODO ASK: Узнать когда это закрывать
 
 	if err = migrate(); err != nil {
 		return err

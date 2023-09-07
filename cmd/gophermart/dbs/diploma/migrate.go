@@ -1,7 +1,7 @@
 package diploma
 
 func migrate() error {
-	_, err := db.Exec(`
+	_, err := DB.Exec(`
 CREATE TABLE users
 (
 	id BIGSERIAL PRIMARY KEY,
