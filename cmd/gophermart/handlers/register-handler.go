@@ -57,14 +57,13 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newJwt, jwtError := auth.CreateJwt(newID)
+	newJwt, jwtError := auth.CreateJwtToken(newID)
 	if jwtError != nil {
 		http.Error(res, jwtError.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res.Header().Set("Authorization", newJwt)
-	res.Header().Set("Set-Cookie", newJwt)
+	res.Header().Set(auth.AuthHeader, newJwt)
 	res.WriteHeader(http.StatusOK)
 }
 

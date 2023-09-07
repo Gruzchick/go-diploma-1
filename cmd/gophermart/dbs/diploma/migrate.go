@@ -1,6 +1,8 @@
 package diploma
 
-func migrate() error {
+import "fmt"
+
+func migrate() {
 	_, err := DB.Exec(`
 CREATE TABLE users
 (
@@ -10,8 +12,17 @@ CREATE TABLE users
 )`,
 	)
 	if err != nil {
-		return err
+		fmt.Println(err)
 	}
 
-	return nil
+	_, err = DB.Exec(`
+CREATE TABLE orders
+(
+	id BIGSERIAL PRIMARY KEY,
+	userId BIGSERIAL
+)`,
+	)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

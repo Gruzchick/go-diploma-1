@@ -17,9 +17,7 @@ func Init(databaseURI string) error {
 
 	//defer DB.Close() // TODO ASK: Узнать когда это закрывать
 
-	if err = migrate(); err != nil {
-		return err
-	}
+	migrate()
 
 	return nil
 }
