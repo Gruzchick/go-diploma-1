@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/configs"
-	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diploma"
+	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diplomadb"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/router"
 	"net/http"
 )
@@ -14,7 +14,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := diploma.Init(configs.DatabaseURI); err != nil {
+	if err := diplomadb.Init(configs.DatabaseURI); err != nil {
 		fmt.Println(err)
 	}
 

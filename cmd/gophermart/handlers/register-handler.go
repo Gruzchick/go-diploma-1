@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/auth"
-	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diploma"
+	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diplomadb"
 	"net/http"
 )
 
@@ -26,7 +26,7 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	queryRow := diploma.DB.QueryRow(`
+	queryRow := diplomadb.DB.QueryRow(`
 	SELECT id FROM users where login = $1
 	`, unmarshalledBody.Login)
 
@@ -44,7 +44,7 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	insertQueryRow := diploma.DB.QueryRow(`
+	insertQueryRow := diplomadb.DB.QueryRow(`
 	INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id
 	`, unmarshalledBody.Login, unmarshalledBody.Password)
 

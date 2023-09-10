@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/auth"
-	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diploma"
+	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diplomadb"
 	"net/http"
 )
 
-func PostOrdersHandler(res http.ResponseWriter, req *http.Request) {
+func CreateOrderHandler(res http.ResponseWriter, req *http.Request) {
 	tokenClaims := req.Context().Value(auth.TokenClaimsContextFieldName).(*auth.TokenClaims)
 
 	var requestOrderID int64
@@ -20,7 +20,7 @@ func PostOrdersHandler(res http.ResponseWriter, req *http.Request) {
 
 	var queryUserID int64
 
-	queryRow := diploma.DB.QueryRow(`
+	queryRow := diplomadb.DB.QueryRow(`
 	SELECT userId FROM orders where id = $1
 	`, requestOrderID)
 
@@ -37,7 +37,7 @@ func PostOrdersHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else {
-		_, insertError := diploma.DB.Exec(`INSERT INTO orders (id, userId) values ($1, $2)`, requestOrderID, tokenClaims.UserID)
+		_, insertError := diplomadb.DB.Exec(`INSERT INTO orders (id, userId) values ($1, $2)`, requestOrderID, tokenClaims.UserID)
 		if insertError != nil {
 			http.Error(res, insertError.Error(), http.StatusInternalServerError)
 			return

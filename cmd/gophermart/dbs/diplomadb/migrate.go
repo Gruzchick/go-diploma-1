@@ -1,4 +1,4 @@
-package diploma
+package diplomadb
 
 import "fmt"
 
