@@ -11,13 +11,12 @@ import (
 	"sync"
 )
 
-type OrderDTO struct {
-	Number  string  `json:"number"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
+type GetUserBalanceHandlerResponse struct {
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
 }
 
-func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
+func GetUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 	tokenClaims := req.Context().Value(auth.TokenClaimsContextFieldName).(*auth.TokenClaims)
 
 	queryRows, queryRowError := diplomadb.DB.Query(`
@@ -64,7 +63,7 @@ func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
 
 	wg.Wait()
 
-	responseOrders := make([]OrderDTO, 0)
+	response := GetUserBalanceHandlerResponse{}
 
 	for _, accrual := range accruals {
 		if accrual.Error != nil {
@@ -72,28 +71,19 @@ func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if accrual.Accrual != nil || accrual.Accrual.Status == accrualclient.PROCESSED {
-			responseOrders = append(responseOrders, OrderDTO{
-				Number:  accrual.Accrual.OrderID,
-				Accrual: accrual.Accrual.AccrualValue,
-				Status:  accrual.Accrual.Status,
-			})
+		if accrual.Accrual != nil {
+			response.Current = response.Current + accrual.Accrual.AccrualValue
+			// TODO: Добавить withdrawn
 		}
 	}
 
-	marshaledResp, err := json.Marshal(responseOrders)
+	marshaledResp, err := json.Marshal(response)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	res.Header().Set("content-type", "application/json")
-
-	if len(responseOrders) == 0 {
-		res.WriteHeader(http.StatusNoContent)
-	} else {
-		res.WriteHeader(http.StatusOK)
-	}
-
+	res.WriteHeader(http.StatusOK)
 	res.Write(marshaledResp)
 }

@@ -44,6 +44,7 @@ func GetOrderAccrual(orderID int64, accrualResponses *[]AccrualResponse, wg *syn
 
 	orderIDString := strconv.FormatInt(orderID, 10)
 
+	// TODO ASK: Почему происходит ожидание выполнения запроса ведь нету await нету
 	response, responseErr := http.Get(configs.AccrualSystemAddress + "/api/orders/" + orderIDString)
 
 	if responseErr != nil {
