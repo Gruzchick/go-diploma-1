@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/auth"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/clients/accrualclient"
@@ -11,13 +10,20 @@ import (
 	"sync"
 )
 
-type GetUserBalanceHandlerResponse struct {
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
+type WithdrawUserBalanceHandlerRequest struct {
+	Order string  `json:"order"`
+	Sum   float64 `json:"sum"`
 }
 
-func GetUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
+func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 	tokenClaims := req.Context().Value(auth.TokenClaimsContextFieldName).(*auth.TokenClaims)
+
+	var unmarshalledBody WithdrawUserBalanceHandlerRequest
+
+	if err := unmarshalBody(req.Body, &unmarshalledBody); err != nil {
+		http.Error(res, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
 
 	queryRows, queryRowError := diplomadb.DB.Query(`
 	SELECT id FROM orders where userId = $1
@@ -63,21 +69,7 @@ func GetUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 	wg.Wait()
 
-	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserId(tokenClaims.UserID)
-	if withdrawalsErrors != nil {
-		http.Error(res, withdrawalsErrors.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	response := GetUserBalanceHandlerResponse{}
-
-	var withdrawalsSum float64
-
-	for _, v := range *withdrawals {
-		withdrawalsSum = withdrawalsSum + v.Sum
-	}
-
-	var currentFromRemote float64
+	var current float64 = 0
 
 	for _, accrual := range accruals {
 		if accrual.Error != nil {
@@ -86,20 +78,34 @@ func GetUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 		}
 
 		if accrual.Accrual != nil && accrual.Accrual.Status == accrualclient.PROCESSED {
-			currentFromRemote = currentFromRemote + accrual.Accrual.AccrualValue
+			current = current + accrual.Accrual.AccrualValue
 		}
 	}
 
-	response.Current = currentFromRemote - withdrawalsSum
-	response.Withdrawn = withdrawalsSum
-
-	marshaledResp, err := json.Marshal(response)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserId(tokenClaims.UserID)
+	if withdrawalsErrors != nil {
+		http.Error(res, withdrawalsErrors.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res.Header().Set("content-type", "application/json")
+	var withdrawalsSum float64
+
+	for _, v := range *withdrawals {
+		withdrawalsSum = withdrawalsSum + v.Sum
+	}
+
+	current = current - withdrawalsSum
+
+	if unmarshalledBody.Sum > current {
+		http.Error(res, queryRowError.Error(), http.StatusPaymentRequired)
+		return
+	}
+
+	_, insertError := diplomadb.DB.Exec(`INSERT INTO withdrawals (userId, sum) values ($1, $2)`, tokenClaims.UserID, unmarshalledBody.Sum)
+	if insertError != nil {
+		http.Error(res, insertError.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	res.WriteHeader(http.StatusOK)
-	res.Write(marshaledResp)
 }

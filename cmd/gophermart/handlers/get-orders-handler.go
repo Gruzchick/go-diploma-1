@@ -72,7 +72,7 @@ func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if accrual.Accrual != nil || accrual.Accrual.Status == accrualclient.PROCESSED {
+		if accrual.Accrual != nil {
 			responseOrders = append(responseOrders, OrderDTO{
 				Number:  accrual.Accrual.OrderID,
 				Accrual: accrual.Accrual.AccrualValue,
