@@ -31,7 +31,8 @@ func migrate() {
 		(
 			id BIGSERIAL PRIMARY KEY,
 			userId BIGSERIAL,
-			sum FLOAT8
+			sum FLOAT8,
+			orderId TEXT
 		)`,
 	)
 	if err != nil {

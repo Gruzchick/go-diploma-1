@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/auth"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/clients/accrualclient"
 	"github.com/Gruzchick/go-diploma-1/cmd/gophermart/dbs/diplomadb"
@@ -29,6 +30,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 	SELECT id FROM orders where userId = $1
 	`, tokenClaims.UserID)
 	if queryRowError != nil && !errors.Is(queryRowError, sql.ErrNoRows) {
+		fmt.Println(queryRowError.Error())
 		http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -46,6 +48,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 		err := queryRows.Scan(&orderID)
 		if err != nil {
+			fmt.Println(queryRowError.Error())
 			http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -55,6 +58,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 	rowsError := queryRows.Err()
 	if rowsError != nil {
+		fmt.Println(queryRowError.Error())
 		http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -73,6 +77,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 	for _, accrual := range accruals {
 		if accrual.Error != nil {
+			fmt.Println(queryRowError.Error())
 			http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -84,6 +89,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserId(tokenClaims.UserID)
 	if withdrawalsErrors != nil {
+		fmt.Println(withdrawalsErrors.Error())
 		http.Error(res, withdrawalsErrors.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -101,8 +107,9 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, insertError := diplomadb.DB.Exec(`INSERT INTO withdrawals (userId, sum) values ($1, $2)`, tokenClaims.UserID, unmarshalledBody.Sum)
+	_, insertError := diplomadb.DB.Exec(`INSERT INTO withdrawals (userId, sum, orderid) values ($1, $2, $3)`, tokenClaims.UserID, unmarshalledBody.Sum, unmarshalledBody.Order)
 	if insertError != nil {
+		fmt.Println(insertError.Error())
 		http.Error(res, insertError.Error(), http.StatusInternalServerError)
 		return
 	}

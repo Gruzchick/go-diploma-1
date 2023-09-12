@@ -13,6 +13,7 @@ func SetRoutes() *chi.Mux {
 
 	router.Post("/api/user/orders", auth.WithAuth(handlers.CreateOrderHandler))
 	router.Get("/api/user/orders", auth.WithAuth(handlers.GetOrdersHandler))
+	router.Get("/api/user/withdrawals", auth.WithAuth(handlers.GetWithdrawalsHandler))
 
 	router.Get("/api/user/balance", auth.WithAuth(handlers.GetUserBalanceHandler))
 	router.Post("/api/user/balance/withdraw", auth.WithAuth(handlers.WithdrawUserBalanceHandler))
