@@ -6,15 +6,15 @@ import (
 )
 
 type WithdrawalRow struct {
-	Id     int64
+	ID     int64
 	userID int64
 	Sum    float64
 	Order  string
 }
 
-func GetWithdrawalsByUserId(userID int64) (*[]WithdrawalRow, error) {
+func GetWithdrawalsByUserID(userID int64) (*[]WithdrawalRow, error) {
 	queryRows, queryRowError := DB.Query(`
-	SELECT id, sum, orderid FROM withdrawals where userId = $1
+		SELECT id, sum, orderid FROM withdrawals where userId = $1
 	`, userID)
 	if queryRowError != nil && !errors.Is(queryRowError, sql.ErrNoRows) {
 		return nil, queryRowError
@@ -30,7 +30,7 @@ func GetWithdrawalsByUserId(userID int64) (*[]WithdrawalRow, error) {
 	for queryRows.Next() {
 		var r WithdrawalRow
 
-		err := queryRows.Scan(&r.Id, &r.Sum, &r.Order)
+		err := queryRows.Scan(&r.ID, &r.Sum, &r.Order)
 		if err != nil {
 			return nil, err
 		}

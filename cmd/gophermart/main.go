@@ -8,9 +8,6 @@ import (
 	"net/http"
 )
 
-// TODO: Добавить дату
-// TODO: Добавить сжатие запросов
-
 func main() {
 	if err := configs.Configure(); err != nil {
 		fmt.Println(err)

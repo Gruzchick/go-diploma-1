@@ -8,14 +8,12 @@ import (
 var DB *sql.DB
 
 func Init(databaseURI string) error {
-	var err error // TODO ASK: Как сделать чтобы не объявлять переменную
+	var err error
 
 	DB, err = sql.Open("pgx", databaseURI)
 	if err != nil {
 		return err
 	}
-
-	//defer DB.Close() // TODO ASK: Узнать когда это закрывать
 
 	migrate()
 

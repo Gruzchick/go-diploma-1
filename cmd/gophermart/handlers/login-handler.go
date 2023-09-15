@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func RegisterHandler(res http.ResponseWriter, req *http.Request) {
+func LoginHandler(res http.ResponseWriter, req *http.Request) {
 	var unmarshalledBody credentialsBody
 
 	if err := unmarshalBody(req.Body, &unmarshalledBody); err != nil {
@@ -16,43 +16,36 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := validateRegisterHandlerBody(unmarshalledBody); err != nil {
+	if err := validateLoginHandlerBody(unmarshalledBody); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	queryRow := diplomadb.DB.QueryRow(`
-		SELECT id FROM users where login = $1
+		SELECT id, password FROM users where login = $1
 	`, unmarshalledBody.Login)
 
 	var userID int64
+	var password string
 
-	queryRowError := queryRow.Scan(&userID)
+	queryRowError := queryRow.Scan(&userID, &password)
 
 	if queryRowError != nil && !errors.Is(queryRowError, sql.ErrNoRows) {
 		http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if queryRowError == nil {
-		http.Error(res, "логин уже занят", http.StatusConflict)
+	if errors.Is(queryRowError, sql.ErrNoRows) {
+		http.Error(res, "неверная пара логин/пароль", http.StatusUnauthorized)
 		return
 	}
 
-	insertQueryRow := diplomadb.DB.QueryRow(`
-		INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id
-	`, unmarshalledBody.Login, unmarshalledBody.Password)
-
-	var newID int64
-
-	insertQueryRowError := insertQueryRow.Scan(&newID)
-
-	if insertQueryRowError != nil {
-		http.Error(res, insertQueryRowError.Error(), http.StatusInternalServerError)
+	if password != unmarshalledBody.Password {
+		http.Error(res, "неверная пара логин/пароль", http.StatusUnauthorized)
 		return
 	}
 
-	newJwt, jwtError := auth.CreateJwtToken(newID)
+	newJwt, jwtError := auth.CreateJwtToken(userID)
 	if jwtError != nil {
 		http.Error(res, jwtError.Error(), http.StatusInternalServerError)
 		return
@@ -62,7 +55,7 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 }
 
-func validateRegisterHandlerBody(body credentialsBody) error {
+func validateLoginHandlerBody(body credentialsBody) error {
 	if len(body.Login) == 0 {
 		return errors.New("не указан логин")
 	}

@@ -10,6 +10,7 @@ func SetRoutes() *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Post("/api/user/register", handlers.RegisterHandler)
+	router.Post("/api/user/login", handlers.LoginHandler)
 
 	router.Post("/api/user/orders", auth.WithAuth(handlers.CreateOrderHandler))
 	router.Get("/api/user/orders", auth.WithAuth(handlers.GetOrdersHandler))

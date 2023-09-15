@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	NEW        string = "NEW"
 	REGISTERED string = "REGISTERED"
 	INVALID    string = "INVALID"
 	PROCESSING string = "PROCESSING"
@@ -44,7 +45,8 @@ func GetOrderAccrual(orderID int64, accrualResponses *[]AccrualResponse, wg *syn
 
 	orderIDString := strconv.FormatInt(orderID, 10)
 
-	// TODO ASK: Почему происходит ожидание выполнения запроса ведь нету await нету
+	fmt.Println(configs.AccrualSystemAddress + "/api/orders/" + orderIDString)
+
 	response, responseErr := http.Get(configs.AccrualSystemAddress + "/api/orders/" + orderIDString)
 
 	if responseErr != nil {
@@ -62,8 +64,10 @@ func GetOrderAccrual(orderID int64, accrualResponses *[]AccrualResponse, wg *syn
 	}
 
 	if response.StatusCode == http.StatusNoContent {
+		stringOrderID := strconv.FormatInt(orderID, 10)
+
 		m.Lock()
-		*accrualResponses = append(*accrualResponses, AccrualResponse{Code: http.StatusNoContent})
+		*accrualResponses = append(*accrualResponses, AccrualResponse{Code: http.StatusNoContent, Accrual: &Accrual{OrderID: stringOrderID, AccrualValue: 0, Status: NEW}})
 		m.Unlock()
 		return
 	}

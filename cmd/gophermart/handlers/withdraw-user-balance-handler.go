@@ -27,7 +27,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	queryRows, queryRowError := diplomadb.DB.Query(`
-	SELECT id FROM orders where userId = $1
+		SELECT id FROM orders where userId = $1
 	`, tokenClaims.UserID)
 	if queryRowError != nil && !errors.Is(queryRowError, sql.ErrNoRows) {
 		fmt.Println(queryRowError.Error())
@@ -65,9 +65,9 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 
 	var wg sync.WaitGroup
 
-	var accruals = make([]accrualclient.AccrualResponse, 0) // TODO ASK: Почему не получилось сделать через канал
+	var accruals = make([]accrualclient.AccrualResponse, 0)
 
-	wg.Add(len(orderIDs)) // TODO ASK: Как занести это внутрь accrualclient.GetOrdersAccruals()
+	wg.Add(len(orderIDs))
 
 	go accrualclient.GetOrdersAccruals(orderIDs, &accruals, &wg)
 
@@ -87,7 +87,7 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserId(tokenClaims.UserID)
+	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserID(tokenClaims.UserID)
 	if withdrawalsErrors != nil {
 		fmt.Println(withdrawalsErrors.Error())
 		http.Error(res, withdrawalsErrors.Error(), http.StatusInternalServerError)
@@ -107,7 +107,9 @@ func WithdrawUserBalanceHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, insertError := diplomadb.DB.Exec(`INSERT INTO withdrawals (userId, sum, orderid) values ($1, $2, $3)`, tokenClaims.UserID, unmarshalledBody.Sum, unmarshalledBody.Order)
+	_, insertError := diplomadb.DB.Exec(`
+		INSERT INTO withdrawals (userId, sum, orderid) values ($1, $2, $3)
+	`, tokenClaims.UserID, unmarshalledBody.Sum, unmarshalledBody.Order)
 	if insertError != nil {
 		fmt.Println(insertError.Error())
 		http.Error(res, insertError.Error(), http.StatusInternalServerError)

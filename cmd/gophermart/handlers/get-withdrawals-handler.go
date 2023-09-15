@@ -15,7 +15,7 @@ type WithdrawalDTO struct {
 func GetWithdrawalsHandler(res http.ResponseWriter, req *http.Request) {
 	tokenClaims := req.Context().Value(auth.TokenClaimsContextFieldName).(*auth.TokenClaims)
 
-	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserId(tokenClaims.UserID)
+	withdrawals, withdrawalsErrors := diplomadb.GetWithdrawalsByUserID(tokenClaims.UserID)
 	if withdrawalsErrors != nil {
 		http.Error(res, withdrawalsErrors.Error(), http.StatusInternalServerError)
 		return

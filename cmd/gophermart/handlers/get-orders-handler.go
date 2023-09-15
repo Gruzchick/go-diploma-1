@@ -21,7 +21,7 @@ func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
 	tokenClaims := req.Context().Value(auth.TokenClaimsContextFieldName).(*auth.TokenClaims)
 
 	queryRows, queryRowError := diplomadb.DB.Query(`
-	SELECT id FROM orders where userId = $1
+		SELECT id FROM orders where userId = $1
 	`, tokenClaims.UserID)
 	if queryRowError != nil && !errors.Is(queryRowError, sql.ErrNoRows) {
 		http.Error(res, queryRowError.Error(), http.StatusInternalServerError)
@@ -56,9 +56,9 @@ func GetOrdersHandler(res http.ResponseWriter, req *http.Request) {
 
 	var wg sync.WaitGroup
 
-	var accruals = make([]accrualclient.AccrualResponse, 0) // TODO ASK: Почему не получилось сделать через канал
+	var accruals = make([]accrualclient.AccrualResponse, 0)
 
-	wg.Add(len(orderIDs)) // TODO ASK: Как занести это внутрь accrualclient.GetOrdersAccruals()
+	wg.Add(len(orderIDs))
 
 	go accrualclient.GetOrdersAccruals(orderIDs, &accruals, &wg)
 
